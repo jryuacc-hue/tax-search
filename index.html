@@ -10,7 +10,7 @@
     content="width=device-width, initial-scale=1.0"
 >
 
-<title>志宇稅務記帳士事務所｜客戶資料綁定</title>
+<title>客戶資料綁定</title>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
@@ -22,14 +22,16 @@
 
 body{
 
+    margin:0;
+
     font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Noto Sans TC",
         Arial,
-        "Microsoft JhengHei",
         sans-serif;
 
     background:#f4f6f9;
-
-    margin:0;
 
     min-height:100vh;
 
@@ -39,34 +41,36 @@ body{
 
     align-items:center;
 
+    padding:20px;
+
 }
 
 .card{
 
-    background:#ffffff;
-
-    width:90%;
+    width:100%;
 
     max-width:430px;
 
-    padding:30px;
+    background:#ffffff;
+
+    padding:30px 25px;
 
     border-radius:16px;
 
     box-shadow:
-        0 4px 20px rgba(0,0,0,.10);
+        0 4px 20px rgba(0,0,0,0.08);
 
 }
 
-h2{
+h1{
 
     text-align:center;
 
-    margin-top:0;
+    font-size:30px;
 
-    margin-bottom:30px;
+    margin:5px 0 35px;
 
-    font-size:28px;
+    color:#111;
 
 }
 
@@ -74,11 +78,11 @@ label{
 
     display:block;
 
-    margin-bottom:8px;
+    font-size:20px;
 
     font-weight:bold;
 
-    font-size:18px;
+    margin-bottom:10px;
 
 }
 
@@ -86,21 +90,27 @@ input{
 
     width:100%;
 
-    padding:14px;
+    height:60px;
 
-    border:1px solid #cccccc;
-
-    border-radius:8px;
+    padding:0 16px;
 
     font-size:20px;
 
+    border:2px solid #cccccc;
+
+    border-radius:10px;
+
     outline:none;
+
+    background:#ffffff;
+
+    color:#222;
 
 }
 
 input:focus{
 
-    border-color:#00B900;
+    border-color:#00b900;
 
 }
 
@@ -108,19 +118,19 @@ button{
 
     width:100%;
 
-    margin-top:20px;
+    height:60px;
 
-    padding:15px;
+    margin-top:25px;
 
     border:none;
 
-    border-radius:8px;
+    border-radius:10px;
 
-    background:#00B900;
+    background:#00b900;
 
     color:white;
 
-    font-size:20px;
+    font-size:21px;
 
     font-weight:bold;
 
@@ -130,7 +140,7 @@ button{
 
 button:disabled{
 
-    background:#999999;
+    background:#aaaaaa;
 
     cursor:not-allowed;
 
@@ -138,15 +148,13 @@ button:disabled{
 
 #status{
 
-    text-align:center;
-
     margin-top:20px;
 
-    line-height:1.7;
+    text-align:center;
 
-    font-size:16px;
+    font-size:17px;
 
-    word-break:break-word;
+    line-height:1.6;
 
 }
 
@@ -162,27 +170,9 @@ button:disabled{
 
 }
 
-.loading{
+.info{
 
     color:#555555;
-
-}
-
-.debug{
-
-    margin-top:20px;
-
-    padding:12px;
-
-    background:#f1f1f1;
-
-    border-radius:8px;
-
-    font-size:12px;
-
-    color:#555;
-
-    word-break:break-all;
 
 }
 
@@ -196,60 +186,46 @@ button:disabled{
 
 <div class="card">
 
+    <h1>客戶資料綁定</h1>
 
-<h2>客戶資料綁定</h2>
+    <label for="taxId">
+        統一編號
+    </label>
 
+    <input
 
-<label for="taxId">
+        type="text"
 
-統一編號
+        id="taxId"
 
-</label>
+        inputmode="numeric"
 
+        maxlength="8"
 
-<input
+        placeholder="請輸入8碼統一編號"
 
-    type="text"
+        autocomplete="off"
 
-    id="taxId"
+    >
 
-    maxlength="8"
+    <button
+        id="submitBtn"
+        onclick="submitData()"
+        disabled
+    >
 
-    inputmode="numeric"
+        送出綁定
 
-    placeholder="請輸入8碼統一編號"
+    </button>
 
->
+    <div
+        id="status"
+        class="info"
+    >
 
+        正在取得 LINE 資料...
 
-<button
-
-    id="submitButton"
-
-    onclick="submitData()"
-
-    disabled
-
->
-
-送出綁定
-
-</button>
-
-
-<div id="status" class="loading">
-
-LINE 資料初始化中...
-
-</div>
-
-
-<div id="debug" class="debug">
-
-等待 LINE 資料...
-
-</div>
-
+    </div>
 
 </div>
 
@@ -257,51 +233,68 @@ LINE 資料初始化中...
 <script>
 
 
-/* =====================================================
+/* ==========================================
    1. LIFF ID
-   ===================================================== */
+========================================== */
 
 const LIFF_ID = "2010250428-wFlJYkBc";
 
 
-/* =====================================================
+/* ==========================================
    2. Make Webhook
-   ===================================================== */
+========================================== */
 
 const MAKE_WEBHOOK_URL =
 "https://hook.us2.make.com/jz3zysq43uxb4tcf7j5xd2wl7l3k71bu";
 
 
-/* =====================================================
-   3. LINE Profile
-   ===================================================== */
+/* ==========================================
+   3. LINE 資料
+========================================== */
 
 let profileData = null;
 
 
-/* =====================================================
-   4. 初始化 LIFF
-   ===================================================== */
+/* ==========================================
+   4. DOM
+========================================== */
+
+const taxInput =
+    document.getElementById("taxId");
+
+const submitBtn =
+    document.getElementById("submitBtn");
+
+const statusBox =
+    document.getElementById("status");
+
+
+/* ==========================================
+   5. 顯示訊息
+========================================== */
+
+function showStatus(message, type){
+
+    statusBox.className = type || "info";
+
+    statusBox.innerHTML = message;
+
+}
+
+
+/* ==========================================
+   6. 初始化 LIFF
+========================================== */
 
 async function initLiff(){
 
-    const status =
-        document.getElementById("status");
-
-    const debug =
-        document.getElementById("debug");
-
-    const button =
-        document.getElementById("submitButton");
-
-
     try{
 
-        status.innerHTML =
-            "LIFF 初始化中...";
+        showStatus(
+            "正在初始化 LINE...",
+            "info"
+        );
 
-
-        /* 初始化 LIFF */
 
         await liff.init({
 
@@ -315,364 +308,354 @@ async function initLiff(){
         );
 
 
-        debug.innerHTML =
-            "LIFF 初始化成功";
-
-
-        /* =================================================
-           檢查登入
-           ================================================= */
+        /*
+         * 如果尚未登入 LINE
+         */
 
         if(!liff.isLoggedIn()){
 
-            status.innerHTML =
-                "正在登入 LINE...";
+            showStatus(
+                "正在登入 LINE...",
+                "info"
+            );
 
-            liff.login();
+
+            /*
+             * 使用 LINE Login
+             */
+
+            liff.login({
+
+                redirectUri:
+                    window.location.href
+
+            });
+
 
             return;
 
         }
 
 
-        /* =================================================
-           已經登入
-           ================================================= */
+        /*
+         * 已經登入
+         * 取得 LINE Profile
+         */
 
-        status.innerHTML =
-            "LINE 已登入，取得資料中...";
+        showStatus(
+            "正在取得 LINE 資料...",
+            "info"
+        );
 
-
-        /* =================================================
-           取得 LINE Profile
-           ================================================= */
 
         profileData =
             await liff.getProfile();
 
 
         console.log(
-            "LINE Profile：",
+            "LINE Profile:",
             profileData
         );
 
 
-        /* =================================================
-           檢查 User ID
-           ================================================= */
+        /*
+         * 確認 User ID
+         */
 
         if(
             !profileData ||
             !profileData.userId
         ){
 
-            status.innerHTML =
-                "<span class='error'>" +
-                "LINE登入成功，但沒有取得 User ID" +
-                "</span>";
+            showStatus(
+                "LINE User ID 尚未取得，請重新開啟。",
+                "error"
+            );
 
-            debug.innerHTML =
-                "getProfile() 沒有取得 userId";
+            submitBtn.disabled = true;
 
             return;
 
         }
 
 
-        /* =================================================
-           顯示成功
-           ================================================= */
+        /*
+         * 成功取得 LINE User ID
+         */
 
-        status.innerHTML =
-
-            "<span class='success'>" +
-
-            "✓ LINE資料取得成功<br>" +
-
-            "您好，" +
-
-            escapeHtml(
-                profileData.displayName || ""
-            ) +
-
-            "</span>";
+        console.log(
+            "LINE User ID:",
+            profileData.userId
+        );
 
 
-        /* =================================================
-           顯示 Debug 資訊
-           ================================================= */
-
-        debug.innerHTML =
-
-            "LINE User ID：<br>" +
-
-            escapeHtml(
-                profileData.userId
-            );
+        showStatus(
+            "LIFF 初始化成功",
+            "success"
+        );
 
 
-        /* =================================================
-           開放按鈕
-           ================================================= */
+        /*
+         * 開放按鈕
+         */
 
-        button.disabled = false;
+        submitBtn.disabled = false;
 
 
-    }catch(error){
+        /*
+         * 統一編號輸入框保持可輸入
+         */
+
+        taxInput.disabled = false;
+
+
+    }
+
+    catch(error){
 
         console.error(
-            "LIFF ERROR:",
+            "LIFF Error:",
             error
         );
 
 
-        status.innerHTML =
-
-            "<span class='error'>" +
-
-            "LIFF初始化失敗<br>" +
-
-            escapeHtml(
-                error.message || String(error)
-            ) +
-
-            "</span>";
+        showStatus(
+            "LINE 初始化失敗<br>" +
+            error.message,
+            "error"
+        );
 
 
-        debug.innerHTML =
-
-            "錯誤內容：<br>" +
-
-            escapeHtml(
-                JSON.stringify(
-                    error,
-                    Object.getOwnPropertyNames(error)
-                )
-            );
+        submitBtn.disabled = true;
 
     }
 
 }
 
 
-/* =====================================================
-   5. 送出統一編號
-   ===================================================== */
+/* ==========================================
+   7. 送出資料
+========================================== */
 
 async function submitData(){
 
 
-    const taxIdInput =
-        document.getElementById("taxId");
-
-
-    const status =
-        document.getElementById("status");
-
-
-    const button =
-        document.getElementById("submitButton");
-
-
-    const taxId =
-        taxIdInput.value.trim();
-
-
-    /* =================================================
-       檢查統一編號
-       ================================================= */
-
-    if(!/^[0-9]{8}$/.test(taxId)){
-
-        alert(
-            "請輸入正確8碼統一編號"
-        );
-
-        taxIdInput.focus();
-
-        return;
-
-    }
-
-
-    /* =================================================
-       檢查 LINE Profile
-       ================================================= */
+    /*
+     * 確認 LINE 資料
+     */
 
     if(
         !profileData ||
         !profileData.userId
     ){
 
-        status.innerHTML =
-
-            "<span class='error'>" +
-
-            "LINE資料尚未取得，請重新開啟" +
-
-            "</span>";
+        showStatus(
+            "LINE User ID 尚未取得，請重新開啟。",
+            "error"
+        );
 
         return;
 
     }
 
 
-    /* =================================================
-       鎖定按鈕
-       ================================================= */
+    /*
+     * 取得統一編號
+     */
 
-    button.disabled = true;
+    const taxId =
+        taxInput.value.trim();
 
 
-    status.innerHTML =
-        "資料傳送中...";
+    /*
+     * 檢查統一編號
+     */
+
+    if(
+        !/^[0-9]{8}$/.test(taxId)
+    ){
+
+        showStatus(
+            "請輸入正確的8碼統一編號。",
+            "error"
+        );
+
+        taxInput.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * 防止重複按
+     */
+
+    submitBtn.disabled = true;
+
+    submitBtn.innerText =
+        "資料送出中...";
+
+
+    showStatus(
+        "正在送出資料...",
+        "info"
+    );
+
+
+    /*
+     * 準備傳給 Make 的資料
+     */
+
+    const data = {
+
+        timestamp:
+            new Date().toISOString(),
+
+        lineName:
+            profileData.displayName || "",
+
+        userId:
+            profileData.userId || "",
+
+        pictureUrl:
+            profileData.pictureUrl || "",
+
+        taxId:
+            taxId
+
+    };
+
+
+    console.log(
+        "送給 Make 的資料:",
+        data
+    );
 
 
     try{
 
 
-        /* =================================================
-           傳送資料到 Make
-           ================================================= */
+        /*
+         * 呼叫 Make Webhook
+         */
 
-        await fetch(
+        const response =
+            await fetch(
 
-            MAKE_WEBHOOK_URL,
+                MAKE_WEBHOOK_URL,
 
-            {
+                {
 
-                method:"POST",
+                    method:"POST",
 
-                mode:"no-cors",
+                    headers:{
 
-                headers:{
+                        "Content-Type":
+                            "application/json"
 
-                    "Content-Type":
-                        "text/plain;charset=UTF-8"
+                    },
 
-                },
+                    body:
+                        JSON.stringify(data)
 
-                body:JSON.stringify({
+                }
 
-                    timestamp:
-                        new Date().toISOString(),
-
-                    lineName:
-                        profileData.displayName || "",
-
-                    userId:
-                        profileData.userId || "",
-
-                    pictureUrl:
-                        profileData.pictureUrl || "",
-
-                    taxId:
-                        taxId
-
-                })
-
-            }
-
-        );
-
-
-        /* =================================================
-           顯示成功
-           ================================================= */
-
-        status.innerHTML =
-
-            "<span class='success'>" +
-
-            "✓ 綁定資料已送出<br>" +
-
-            "統一編號：" +
-
-            escapeHtml(taxId) +
-
-            "</span>";
-
-
-        /* =================================================
-           顯示傳送資料
-           ================================================= */
-
-        document.getElementById("debug").innerHTML =
-
-            "已送出至 Make<br><br>" +
-
-            "統一編號：" +
-
-            escapeHtml(taxId) +
-
-            "<br>" +
-
-            "LINE User ID：" +
-
-            escapeHtml(
-                profileData.userId
             );
 
 
-    }catch(error){
+        console.log(
+            "Make response:",
+            response.status
+        );
 
+
+        /*
+         * Make 成功
+         */
+
+        if(response.ok){
+
+            showStatus(
+
+                "✓ 客戶資料綁定成功",
+
+                "success"
+
+            );
+
+
+            submitBtn.innerText =
+                "綁定完成";
+
+
+            /*
+             * 清空統一編號
+             */
+
+            taxInput.value = "";
+
+
+        }
+
+        else{
+
+            throw new Error(
+                "Make Webhook 回應錯誤：" +
+                response.status
+            );
+
+        }
+
+
+    }
+
+    catch(error){
 
         console.error(
-            "MAKE ERROR:",
+            "送出錯誤:",
             error
         );
 
 
-        status.innerHTML =
+        showStatus(
 
-            "<span class='error'>" +
+            "系統錯誤<br>" +
+            error.message,
 
-            "傳送失敗<br>" +
+            "error"
 
-            escapeHtml(
-                error.message || String(error)
-            ) +
-
-            "</span>";
+        );
 
 
-        button.disabled = false;
+        submitBtn.disabled = false;
+
+        submitBtn.innerText =
+            "重新送出";
 
     }
 
 }
 
 
-/* =====================================================
-   6. HTML 安全處理
-   ===================================================== */
+/* ==========================================
+   8. 頁面載入
+========================================== */
 
-function escapeHtml(text){
+window.addEventListener(
 
-    return String(text)
+    "load",
 
-        .replace(/&/g,"&amp;")
+    function(){
 
-        .replace(/</g,"&lt;")
+        initLiff();
 
-        .replace(/>/g,"&gt;")
+    }
 
-        .replace(/"/g,"&quot;")
-
-        .replace(/'/g,"&#039;");
-
-}
-
-
-/* =====================================================
-   7. 啟動 LIFF
-   ===================================================== */
-
-initLiff();
+);
 
 
 </script>
-
 
 </body>
 
