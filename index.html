@@ -161,25 +161,25 @@ async function submitData(){
             {
                 method:"POST",
 
-                headers:{
-                    "Content-Type":"application/json"
-                },
+                 headers:{
+            "Content-Type":"text/plain;charset=UTF-8"
+        },
 
-                body:JSON.stringify({
+        body:JSON.stringify({
 
-                    timestamp:new Date().toLocaleString(),
+            timestamp:new Date().toLocaleString(),
 
-                    lineName:profileData.displayName,
+            lineName:profileData.displayName,
 
-                    userId:profileData.userId,
+            userId:profileData.userId,
 
-                    pictureUrl:profileData.pictureUrl || "",
+            pictureUrl:profileData.pictureUrl || "",
 
-                    taxId:taxId
+            taxId:taxId
 
-                })
-            }
-        );
+        })
+    }
+);
 
         if(response.ok){
 
