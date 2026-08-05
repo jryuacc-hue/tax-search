@@ -1,245 +1,679 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>志宇稅務記帳士事務所</title>
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>志宇稅務記帳士事務所｜客戶資料綁定</title>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
 
+*{
+    box-sizing:border-box;
+}
+
 body{
-    font-family:Arial,sans-serif;
+
+    font-family:
+        Arial,
+        "Microsoft JhengHei",
+        sans-serif;
+
     background:#f4f6f9;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
+
     margin:0;
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
 }
 
 .card{
-    background:#fff;
+
+    background:#ffffff;
+
     width:90%;
-    max-width:420px;
+
+    max-width:430px;
+
     padding:30px;
-    border-radius:12px;
-    box-shadow:0 4px 15px rgba(0,0,0,.08);
+
+    border-radius:16px;
+
+    box-shadow:
+        0 4px 20px rgba(0,0,0,.10);
+
 }
 
 h2{
+
     text-align:center;
-    margin-bottom:25px;
+
+    margin-top:0;
+
+    margin-bottom:30px;
+
+    font-size:28px;
+
 }
 
 label{
+
     display:block;
+
     margin-bottom:8px;
+
     font-weight:bold;
+
+    font-size:18px;
+
 }
 
 input{
+
     width:100%;
-    padding:12px;
-    border:1px solid #ccc;
-    border-radius:6px;
-    box-sizing:border-box;
-    font-size:16px;
+
+    padding:14px;
+
+    border:1px solid #cccccc;
+
+    border-radius:8px;
+
+    font-size:20px;
+
+    outline:none;
+
+}
+
+input:focus{
+
+    border-color:#00B900;
+
 }
 
 button{
+
     width:100%;
+
     margin-top:20px;
-    background:#00B900;
-    color:#fff;
+
+    padding:15px;
+
     border:none;
-    padding:12px;
-    border-radius:6px;
-    font-size:16px;
+
+    border-radius:8px;
+
+    background:#00B900;
+
+    color:white;
+
+    font-size:20px;
+
+    font-weight:bold;
+
     cursor:pointer;
+
 }
 
-button:hover{
-    opacity:.9;
+button:disabled{
+
+    background:#999999;
+
+    cursor:not-allowed;
+
 }
 
 #status{
+
     text-align:center;
-    margin-top:15px;
+
+    margin-top:20px;
+
+    line-height:1.7;
+
+    font-size:16px;
+
+    word-break:break-word;
+
 }
 
 .success{
-    color:green;
+
+    color:#008000;
+
 }
 
 .error{
-    color:red;
+
+    color:#d00000;
+
+}
+
+.loading{
+
+    color:#555555;
+
+}
+
+.debug{
+
+    margin-top:20px;
+
+    padding:12px;
+
+    background:#f1f1f1;
+
+    border-radius:8px;
+
+    font-size:12px;
+
+    color:#555;
+
+    word-break:break-all;
+
 }
 
 </style>
 
 </head>
+
+
 <body>
+
 
 <div class="card">
 
+
 <h2>客戶資料綁定</h2>
 
-<label>統一編號</label>
+
+<label for="taxId">
+
+統一編號
+
+</label>
+
 
 <input
+
     type="text"
+
     id="taxId"
+
     maxlength="8"
+
+    inputmode="numeric"
+
     placeholder="請輸入8碼統一編號"
+
 >
 
-<button onclick="submitData()">
+
+<button
+
+    id="submitButton"
+
+    onclick="submitData()"
+
+    disabled
+
+>
+
 送出綁定
+
 </button>
 
-<div id="status"></div>
+
+<div id="status" class="loading">
+
+LINE 資料初始化中...
 
 </div>
 
+
+<div id="debug" class="debug">
+
+等待 LINE 資料...
+
+</div>
+
+
+</div>
+
+
 <script>
 
+
+/* =====================================================
+   1. LIFF ID
+   ===================================================== */
+
 const LIFF_ID = "2010250428-wFlJYkBc";
+
+
+/* =====================================================
+   2. Make Webhook
+   ===================================================== */
 
 const MAKE_WEBHOOK_URL =
 "https://hook.us2.make.com/jz3zysq43uxb4tcf7j5xd2wl7l3k71bu";
 
+
+/* =====================================================
+   3. LINE Profile
+   ===================================================== */
+
 let profileData = null;
+
+
+/* =====================================================
+   4. 初始化 LIFF
+   ===================================================== */
 
 async function initLiff(){
 
+    const status =
+        document.getElementById("status");
+
+    const debug =
+        document.getElementById("debug");
+
+    const button =
+        document.getElementById("submitButton");
+
+
     try{
 
+        status.innerHTML =
+            "LIFF 初始化中...";
+
+
+        /* 初始化 LIFF */
+
         await liff.init({
+
             liffId: LIFF_ID
+
         });
 
-        console.log("LIFF 初始化成功");
+
+        console.log(
+            "LIFF 初始化成功"
+        );
+
+
+        debug.innerHTML =
+            "LIFF 初始化成功";
+
+
+        /* =================================================
+           檢查登入
+           ================================================= */
 
         if(!liff.isLoggedIn()){
 
-            console.log("尚未登入 LINE");
+            status.innerHTML =
+                "正在登入 LINE...";
 
             liff.login();
 
             return;
-        }
-
-        console.log("LINE 已登入");
-
-        profileData = await liff.getProfile();
-
-        console.log("LINE Profile：", profileData);
-
-        if(profileData && profileData.userId){
-
-            document.getElementById("status").innerHTML =
-            "<span class='success'>" +
-            "LINE 登入成功<br>" +
-            "您好，" + profileData.displayName +
-            "</span>";
-
-        }else{
-
-            document.getElementById("status").innerHTML =
-            "<span class='error'>" +
-            "無法取得 LINE User ID" +
-            "</span>";
 
         }
 
-    }catch(err){
 
-        console.error("LIFF ERROR:", err);
+        /* =================================================
+           已經登入
+           ================================================= */
 
-        document.getElementById("status").innerHTML =
-        "<span class='error'>" +
-        "LIFF錯誤：" + err.message +
-        "</span>";
+        status.innerHTML =
+            "LINE 已登入，取得資料中...";
 
-    }
 
-}
-async function submitData(){
+        /* =================================================
+           取得 LINE Profile
+           ================================================= */
 
-    const taxId =
-        document.getElementById("taxId").value.trim();
+        profileData =
+            await liff.getProfile();
 
-    if(!/^[0-9]{8}$/.test(taxId)){
 
-        alert("請輸入正確8碼統一編號");
-        return;
-
-    }
-
-    if(!profileData){
-
-        document.getElementById("status").innerHTML =
-        "<span class='error'>LINE資料尚未取得，請重新開啟</span>";
-
-        return;
-
-    }
-
-    document.getElementById("status").innerHTML =
-    "資料傳送中...";
-
-    try{
-
-        await fetch(
-            MAKE_WEBHOOK_URL,
-            {
-                method: "POST",
-
-                mode: "no-cors",
-
-                headers: {
-                    "Content-Type": "text/plain;charset=UTF-8"
-                },
-
-                body: JSON.stringify({
-
-                    timestamp: new Date().toISOString(),
-
-                    lineName: profileData.displayName || "",
-
-                    userId: profileData.userId || "",
-
-                    pictureUrl: profileData.pictureUrl || "",
-
-                    taxId: taxId
-
-                })
-            }
+        console.log(
+            "LINE Profile：",
+            profileData
         );
 
-        document.getElementById("status").innerHTML =
-        "<span class='success'>✓ 綁定資料已送出</span>";
+
+        /* =================================================
+           檢查 User ID
+           ================================================= */
+
+        if(
+            !profileData ||
+            !profileData.userId
+        ){
+
+            status.innerHTML =
+                "<span class='error'>" +
+                "LINE登入成功，但沒有取得 User ID" +
+                "</span>";
+
+            debug.innerHTML =
+                "getProfile() 沒有取得 userId";
+
+            return;
+
+        }
+
+
+        /* =================================================
+           顯示成功
+           ================================================= */
+
+        status.innerHTML =
+
+            "<span class='success'>" +
+
+            "✓ LINE資料取得成功<br>" +
+
+            "您好，" +
+
+            escapeHtml(
+                profileData.displayName || ""
+            ) +
+
+            "</span>";
+
+
+        /* =================================================
+           顯示 Debug 資訊
+           ================================================= */
+
+        debug.innerHTML =
+
+            "LINE User ID：<br>" +
+
+            escapeHtml(
+                profileData.userId
+            );
+
+
+        /* =================================================
+           開放按鈕
+           ================================================= */
+
+        button.disabled = false;
+
 
     }catch(error){
 
-        console.error(error);
+        console.error(
+            "LIFF ERROR:",
+            error
+        );
 
-        document.getElementById("status").innerHTML =
-        "<span class='error'>傳送失敗：" +
-        error.message +
-        "</span>";
+
+        status.innerHTML =
+
+            "<span class='error'>" +
+
+            "LIFF初始化失敗<br>" +
+
+            escapeHtml(
+                error.message || String(error)
+            ) +
+
+            "</span>";
+
+
+        debug.innerHTML =
+
+            "錯誤內容：<br>" +
+
+            escapeHtml(
+                JSON.stringify(
+                    error,
+                    Object.getOwnPropertyNames(error)
+                )
+            );
 
     }
 
 }
 
+
+/* =====================================================
+   5. 送出統一編號
+   ===================================================== */
+
+async function submitData(){
+
+
+    const taxIdInput =
+        document.getElementById("taxId");
+
+
+    const status =
+        document.getElementById("status");
+
+
+    const button =
+        document.getElementById("submitButton");
+
+
+    const taxId =
+        taxIdInput.value.trim();
+
+
+    /* =================================================
+       檢查統一編號
+       ================================================= */
+
+    if(!/^[0-9]{8}$/.test(taxId)){
+
+        alert(
+            "請輸入正確8碼統一編號"
+        );
+
+        taxIdInput.focus();
+
+        return;
+
+    }
+
+
+    /* =================================================
+       檢查 LINE Profile
+       ================================================= */
+
+    if(
+        !profileData ||
+        !profileData.userId
+    ){
+
+        status.innerHTML =
+
+            "<span class='error'>" +
+
+            "LINE資料尚未取得，請重新開啟" +
+
+            "</span>";
+
+        return;
+
+    }
+
+
+    /* =================================================
+       鎖定按鈕
+       ================================================= */
+
+    button.disabled = true;
+
+
+    status.innerHTML =
+        "資料傳送中...";
+
+
+    try{
+
+
+        /* =================================================
+           傳送資料到 Make
+           ================================================= */
+
+        await fetch(
+
+            MAKE_WEBHOOK_URL,
+
+            {
+
+                method:"POST",
+
+                mode:"no-cors",
+
+                headers:{
+
+                    "Content-Type":
+                        "text/plain;charset=UTF-8"
+
+                },
+
+                body:JSON.stringify({
+
+                    timestamp:
+                        new Date().toISOString(),
+
+                    lineName:
+                        profileData.displayName || "",
+
+                    userId:
+                        profileData.userId || "",
+
+                    pictureUrl:
+                        profileData.pictureUrl || "",
+
+                    taxId:
+                        taxId
+
+                })
+
+            }
+
+        );
+
+
+        /* =================================================
+           顯示成功
+           ================================================= */
+
+        status.innerHTML =
+
+            "<span class='success'>" +
+
+            "✓ 綁定資料已送出<br>" +
+
+            "統一編號：" +
+
+            escapeHtml(taxId) +
+
+            "</span>";
+
+
+        /* =================================================
+           顯示傳送資料
+           ================================================= */
+
+        document.getElementById("debug").innerHTML =
+
+            "已送出至 Make<br><br>" +
+
+            "統一編號：" +
+
+            escapeHtml(taxId) +
+
+            "<br>" +
+
+            "LINE User ID：" +
+
+            escapeHtml(
+                profileData.userId
+            );
+
+
+    }catch(error){
+
+
+        console.error(
+            "MAKE ERROR:",
+            error
+        );
+
+
+        status.innerHTML =
+
+            "<span class='error'>" +
+
+            "傳送失敗<br>" +
+
+            escapeHtml(
+                error.message || String(error)
+            ) +
+
+            "</span>";
+
+
+        button.disabled = false;
+
+    }
+
+}
+
+
+/* =====================================================
+   6. HTML 安全處理
+   ===================================================== */
+
+function escapeHtml(text){
+
+    return String(text)
+
+        .replace(/&/g,"&amp;")
+
+        .replace(/</g,"&lt;")
+
+        .replace(/>/g,"&gt;")
+
+        .replace(/"/g,"&quot;")
+
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* =====================================================
+   7. 啟動 LIFF
+   ===================================================== */
+
 initLiff();
+
 
 </script>
 
+
 </body>
+
 </html>
-  
