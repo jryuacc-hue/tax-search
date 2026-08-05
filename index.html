@@ -121,24 +121,52 @@ async function initLiff(){
             liffId: LIFF_ID
         });
 
+        console.log("LIFF 初始化成功");
+
         if(!liff.isLoggedIn()){
+
+            console.log("尚未登入 LINE");
+
             liff.login();
+
             return;
         }
 
+        console.log("LINE 已登入");
+
         profileData = await liff.getProfile();
+
+        console.log("LINE Profile：", profileData);
+
+        if(profileData && profileData.userId){
+
+            document.getElementById("status").innerHTML =
+            "<span class='success'>" +
+            "LINE 登入成功<br>" +
+            "您好，" + profileData.displayName +
+            "</span>";
+
+        }else{
+
+            document.getElementById("status").innerHTML =
+            "<span class='error'>" +
+            "無法取得 LINE User ID" +
+            "</span>";
+
+        }
 
     }catch(err){
 
-        console.error(err);
+        console.error("LIFF ERROR:", err);
 
         document.getElementById("status").innerHTML =
-        "<span class='error'>LIFF初始化失敗</span>";
+        "<span class='error'>" +
+        "LIFF錯誤：" + err.message +
+        "</span>";
 
     }
 
 }
-
 async function submitData(){
 
     const taxId =
